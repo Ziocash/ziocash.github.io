@@ -1,58 +1,566 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.NET developer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portfolio | Ziocash</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
+    <!-- Theme Toggle (visible on both desktop and mobile) -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+    </button>
 
-    <section class="hero">
-        <div class="content">
-            <h1>.NET Core developer and C# addicted</h1>
-            <a href="#skills" class="btn">Skills</a>
-            <a href="#portfolio" class="btn">Portfolio</a>
-            <a href="#contacts" class="btn">Contacts</a>
-        </div>
-    </section>
+    <!-- Desktop Version -->
+    <div class="desktop-version">
+        <div class="presentation-container">
+            <!-- Slide Navigation -->
+            <div class="slide-navigation">
+                <button id="prev-slide" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+                <button id="next-slide" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            
+            <!-- Slide Indicators (moved to separate container) -->
+            <div class="slide-indicators"></div>
 
-    <section class="skills">
-        <div class="skills-container">
-            <h2>Web development</h2>
-            <img src="images/html.svg" alt="HTML5" class="lang-img skill">
-            <img src="images/css.svg" alt="CSS3" class="lang-img skill">
-            <img src="images/javascript.svg" alt="JavaScript" class="lang-img skill">
-            <img src="images/dotnet.svg" alt=".NET" class="lang-img skill">
-        </div>
-    </section>
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
 
-    <section class="portfolio">
-        <div class="container">
-            <h2>My projects</h2>
-        </div>
-    </section>
+            <!-- Slide Counter -->
+            <div class="slide-counter">
+                <span id="current-slide">1</span>/<span id="total-slides">4</span>
+            </div>
 
-    <section class="contacts">
-        <div class="container">
-            <h2>Contact me</h2>
-            <div>
+            <!-- Slides -->
+            <div class="slides-container">
+                <!-- Intro Slide -->
+                <section class="slide active" id="intro">
+                    <div class="hero-content">
+                        <h1>.NET Core developer and C# addicted</h1>
+                        <p>Building robust applications with modern technologies</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">View Portfolio</a>
+                            <a href="#" class="btn outline">Download CV</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Skills Slide -->
+                <section class="slide" id="skills">
+                    <div class="slide-content">
+                        <h2>Technical Skills</h2>
+                        
+                        <div class="skills-grid">
+                            <div class="skill-category">
+                                <h3>Web Development</h3>
+                                <div class="skills-container">
+                                    <div class="skill">
+                                        <img src="images/html.svg" alt="HTML5" class="lang-img">
+                                        <span>HTML5</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="images/css.svg" alt="CSS3" class="lang-img">
+                                        <span>CSS3</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="images/javascript.svg" alt="JavaScript" class="lang-img">
+                                        <span>JavaScript</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="images/dotnet.svg" alt=".NET" class="lang-img">
+                                        <span>.NET</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-category">
+                                <h3>Backend Development</h3>
+                                <div class="skills-container">
+                                    <div class="skill">
+                                        <img src="" alt="C#" class="lang-img">
+                                        <span>C#</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="images/dotnet.svg" alt=".NET Core" class="lang-img">
+                                        <span>.NET Core</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="SQL" class="lang-img">
+                                        <span>SQL</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="REST APIs" class="lang-img">
+                                        <span>REST APIs</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="skill-category">
+                                <h3>Tools & Practices</h3>
+                                <div class="skills-container">
+                                    <div class="skill">
+                                        <img src="images/git.svg" alt="Git" class="lang-img">
+                                        <span>Git</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="CI/CD" class="lang-img">
+                                        <span>CI/CD</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Agile" class="lang-img">
+                                        <span>Agile</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Testing" class="lang-img">
+                                        <span>Testing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="skill-category">
+                                <h3>Tools & Practices</h3>
+                                <div class="skills-container">
+                                    <div class="skill">
+                                        <img src="images/git.svg" alt="Git" class="lang-img">
+                                        <span>Git</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="CI/CD" class="lang-img">
+                                        <span>CI/CD</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Agile" class="lang-img">
+                                        <span>Agile</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Testing" class="lang-img">
+                                        <span>Testing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="skill-category">
+                                <h3>Tools & Practices</h3>
+                                <div class="skills-container">
+                                    <div class="skill">
+                                        <img src="images/git.svg" alt="Git" class="lang-img">
+                                        <span>Git</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="CI/CD" class="lang-img">
+                                        <span>CI/CD</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Agile" class="lang-img">
+                                        <span>Agile</span>
+                                    </div>
+                                    <div class="skill">
+                                        <img src="" alt="Testing" class="lang-img">
+                                        <span>Testing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Portfolio Slide -->
+                <section class="slide" id="portfolio">
+                    <div class="slide-content">
+                        <h2>My Projects</h2>
+                        
+                        <div class="projects-grid">
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h3>ExplorerRestarter</h3>
+                                    <p>A utility tool to restart Windows Explorer process with enhanced features.</p>
+                                </div>
+                                <div class="project-content">
+                                    <div class="project-tags">
+                                        <span class="tag">C#</span>
+                                        <span class="tag">.NET</span>
+                                        <span class="tag">Windows</span>
+                                    </div>
+                                    <div class="project-downloads">
+                                        <img src="https://img.shields.io/github/downloads/Ziocash/ExplorerRestarter/total?color=green" alt="Download count">
+                                    </div>
+                                </div>
+                                <div class="project-footer">
+                                    <a href="https://github.com/Ziocash/ExplorerRestarter" target="_blank" class="project-link">
+                                        <i class="fab fa-github"></i> View Project <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h3>LxssManager_Restarter</h3>
+                                    <p>A tool to restart the Windows Subsystem for Linux service manager.</p>
+                                </div>
+                                <div class="project-content">
+                                    <div class="project-tags">
+                                        <span class="tag">C#</span>
+                                        <span class="tag">.NET</span>
+                                        <span class="tag">WSL</span>
+                                        <span class="tag">Windows</span>
+                                    </div>
+                                    <div class="project-downloads">
+                                        <img src="https://img.shields.io/github/downloads/Ziocash/LxssManager_Restarter/total?color=green" alt="Download count">
+                                    </div>
+                                </div>
+                                <div class="project-footer">
+                                    <a href="https://github.com/LxssManager_Restarter" target="_blank" class="project-link">
+                                        <i class="fab fa-github"></i> View Project <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h3>Portfolio Website</h3>
+                                    <p>A presentation-style portfolio website built with HTML, CSS, and JavaScript.</p>
+                                </div>
+                                <div class="project-content">
+                                    <div class="project-tags">
+                                        <span class="tag">HTML</span>
+                                        <span class="tag">CSS</span>
+                                        <span class="tag">JavaScript</span>
+                                        <span class="tag">GSAP</span>
+                                    </div>
+                                </div>
+                                <div class="project-footer">
+                                    <a href="#" class="project-link">
+                                        <i class="fab fa-github"></i> View Project <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GitHub Repos Section -->
+                        <div class="github-repos-section">
+                            <h3>My Popular GitHub Repositories</h3>
+                            <div id="github-repos-container-desktop" class="projects-grid">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading repositories...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Slide -->
+                <section class="slide" id="contact">
+                    <div class="slide-content">
+                        <h2>Get In Touch</h2>
+                        
+                        <div class="contact-container">
+                            <div class="contact-card">
+                                <div class="contact-header">
+                                    <h3>Contact Me</h3>
+                                    <p>Feel free to reach out for collaborations or just a friendly chat</p>
+                                </div>
+                                <div class="contact-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="name-desktop">Name</label>
+                                            <input type="text" id="name-desktop" placeholder="Your name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email-desktop">Email</label>
+                                            <input type="email" id="email-desktop" placeholder="your.email@example.com">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject-desktop">Subject</label>
+                                        <input type="text" id="subject-desktop" placeholder="What is this regarding?">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="message-desktop">Message</label>
+                                        <textarea id="message-desktop" rows="4" placeholder="Your message here..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn primary">Send Message</button>
+                                </div>
+                                
+                                <div class="social-connect">
+                                    <h3>Connect With Me</h3>
+                                    <div class="social-links">
+                                        <a href="https://github.com/ziocash" target="_blank" class="social-link">
+                                            <i class="fab fa-github"></i> GitHub
+                                        </a>
+                                        <a href="https://bsky.app/profile/ziocash.dev" target="_blank" class="social-link">
+                                            <i class="fas fa-external-link-alt"></i> Bluesky
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
-    </section>
 
-    <footer>
-        <p>&copy; 2024 Ziocash. Developed with ❤️ using GSAP.</p>
-        <p>Icons proudly provided by <a href="https://github.com/tandpfun/skill-icons" target="_blank">Skill Icons</a>
-            by <a href="https://github.com/tandpfun" target="_blank">Thijs</a>.</p>
-        <div class="social-links">
-            <a href="https://github.com/ziocash" target="_blank">GitHub</a> |
-            <a href="https://bsky.app/profile/ziocash.dev" target="_blank">Bluesky</a>
+        <footer class="desktop-footer">
+            <p>&copy; 2024 Ziocash. Developed with ❤️</p>
+            <p>Icons proudly provided by <a href="https://github.com/tandpfun/skill-icons" target="_blank">Skill Icons</a>
+            <div class="social-links">
+                <a href="https://github.com/ziocash" target="_blank">GitHub</a> |
+                <a href="https://bsky.app/profile/ziocash.dev" target="_blank">Bluesky</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Mobile Version -->
+    <div class="mobile-version">
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <a href="#mobile-intro" class="mobile-nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#mobile-skills" class="mobile-nav-item">
+                <i class="fas fa-code"></i>
+                <span>Skills</span>
+            </a>
+            <a href="#mobile-projects" class="mobile-nav-item">
+                <i class="fas fa-folder-open"></i>
+                <span>Projects</span>
+            </a>
+            <a href="#mobile-contact" class="mobile-nav-item">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </a>
+        </nav>
+
+        <!-- Mobile Content -->
+        <div class="mobile-content">
+            <!-- Mobile Intro Section -->
+            <section id="mobile-intro" class="mobile-section">
+                <div class="mobile-hero">
+                    <h1>.NET Core developer and C# addicted</h1>
+                    <p>Building robust applications with modern technologies</p>
+                    <div class="mobile-buttons">
+                        <a href="#mobile-projects" class="btn primary">View Portfolio</a>
+                        <a href="#" class="btn outline">Download CV</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mobile Skills Section -->
+            <section id="mobile-skills" class="mobile-section">
+                <h2>Technical Skills</h2>
+                
+                <div class="mobile-skill-category">
+                    <h3>Web Development</h3>
+                    <div class="mobile-skills-container">
+                        <div class="mobile-skill">
+                            <img src="images/html.svg" alt="HTML5" class="lang-img">
+                            <span>HTML5</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="images/css.svg" alt="CSS3" class="lang-img">
+                            <span>CSS3</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="images/javascript.svg" alt="JavaScript" class="lang-img">
+                            <span>JavaScript</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="images/dotnet.svg" alt=".NET" class="lang-img">
+                            <span>.NET</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mobile-skill-category">
+                    <h3>Backend Development</h3>
+                    <div class="mobile-skills-container">
+                        <div class="mobile-skill">
+                            <img src="" alt="C#" class="lang-img">
+                            <span>C#</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="images/dotnet.svg" alt=".NET Core" class="lang-img">
+                            <span>.NET Core</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="" alt="SQL" class="lang-img">
+                            <span>SQL</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="" alt="REST APIs" class="lang-img">
+                            <span>REST APIs</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mobile-skill-category">
+                    <h3>Tools & Practices</h3>
+                    <div class="mobile-skills-container">
+                        <div class="mobile-skill">
+                            <img src="" alt="Git" class="lang-img">
+                            <span>Git</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="" alt="CI/CD" class="lang-img">
+                            <span>CI/CD</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="" alt="Agile" class="lang-img">
+                            <span>Agile</span>
+                        </div>
+                        <div class="mobile-skill">
+                            <img src="" alt="Testing" class="lang-img">
+                            <span>Testing</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mobile Projects Section -->
+            <section id="mobile-projects" class="mobile-section">
+                <h2>My Projects</h2>
+                
+                <div class="mobile-project-card">
+                    <div class="mobile-project-header">
+                        <h3>ExplorerRestarter</h3>
+                        <p>A utility tool to restart Windows Explorer process with enhanced features.</p>
+                    </div>
+                    <div class="mobile-project-content">
+                        <div class="mobile-project-tags">
+                            <span class="tag">C#</span>
+                            <span class="tag">.NET</span>
+                            <span class="tag">Windows</span>
+                        </div>
+                        <div class="mobile-project-downloads">
+                            <img src="https://img.shields.io/github/downloads/Ziocash/ExplorerRestarter/total?color=green" alt="Download count">
+                        </div>
+                    </div>
+                    <div class="mobile-project-footer">
+                        <a href="https://github.com/Ziocash/ExplorerRestarter" target="_blank" class="mobile-project-link">
+                            <i class="fab fa-github"></i> View Project
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mobile-project-card">
+                    <div class="mobile-project-header">
+                        <h3>LxssManager_Restarter</h3>
+                        <p>A tool to restart the Windows Subsystem for Linux service manager.</p>
+                    </div>
+                    <div class="mobile-project-content">
+                        <div class="mobile-project-tags">
+                            <span class="tag">C#</span>
+                            <span class="tag">.NET</span>
+                            <span class="tag">WSL</span>
+                            <span class="tag">Windows</span>
+                        </div>
+                        <div class="mobile-project-downloads">
+                            <img src="https://img.shields.io/github/downloads/Ziocash/LxssManager_Restarter/total?color=green" alt="Download count">
+                        </div>
+                    </div>
+                    <div class="mobile-project-footer">
+                        <a href="https://github.com/LxssManager_Restarter" target="_blank" class="mobile-project-link">
+                            <i class="fab fa-github"></i> View Project
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mobile-project-card">
+                    <div class="mobile-project-header">
+                        <h3>Portfolio Website</h3>
+                        <p>A presentation-style portfolio website built with HTML, CSS, and JavaScript.</p>
+                    </div>
+                    <div class="mobile-project-content">
+                        <div class="mobile-project-tags">
+                            <span class="tag">HTML</span>
+                            <span class="tag">CSS</span>
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">GSAP</span>
+                        </div>
+                    </div>
+                    <div class="mobile-project-footer">
+                        <a href="#" class="mobile-project-link">
+                            <i class="fab fa-github"></i> View Project
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile GitHub Repos Section -->
+                <div class="mobile-github-repos-section">
+                    <h3>My Popular GitHub Repositories</h3>
+                    <div id="github-repos-container-mobile" class="mobile-repos-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading repositories...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mobile Contact Section -->
+            <section id="mobile-contact" class="mobile-section">
+                <h2>Get In Touch</h2>
+                
+                <div class="mobile-contact-card">
+                    <div class="mobile-contact-header">
+                        <h3>Contact Me</h3>
+                        <p>Feel free to reach out for collaborations or just a friendly chat</p>
+                    </div>
+                    <div class="mobile-contact-form">
+                        <div class="form-group">
+                            <label for="name-mobile">Name</label>
+                            <input type="text" id="name-mobile" placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email-mobile">Email</label>
+                            <input type="email" id="email-mobile" placeholder="your.email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="subject-mobile">Subject</label>
+                            <input type="text" id="subject-mobile" placeholder="What is this regarding?">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-mobile">Message</label>
+                            <textarea id="message-mobile" rows="4" placeholder="Your message here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn primary">Send Message</button>
+                    </div>
+                    
+                    <div class="mobile-social-connect">
+                        <h3>Connect With Me</h3>
+                        <div class="mobile-social-links">
+                            <a href="https://github.com/ziocash" target="_blank" class="mobile-social-link">
+                                <i class="fab fa-github"></i> GitHub
+                            </a>
+                            <a href="https://bsky.app/profile/ziocash.dev" target="_blank" class="mobile-social-link">
+                                <i class="fas fa-external-link-alt"></i> Bluesky
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="mobile-footer">
+                    <p>&copy; 2024 Ziocash. Developed with ❤️</p>
+                    <p>Icons proudly provided by <a href="https://github.com/tandpfun/skill-icons" target="_blank">Skill Icons</a>
+                    <div class="mobile-social-links">
+                        <a href="https://github.com/ziocash" target="_blank">GitHub</a> |
+                        <a href="https://bsky.app/profile/ziocash.dev" target="_blank">Bluesky</a>
+                    </div>
+                </footer>
+            </section>
         </div>
-    </footer>
-
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="script.js"></script>
