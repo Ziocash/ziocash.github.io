@@ -42,6 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const slides = document.querySelectorAll(".slide")
         const totalSlides = slides.length
         let currentSlide = 0
+        let isAnimating = false // Flag to prevent animation overlap
+
+        // Track visited slides to avoid reanimating content
+        const visitedSlides = new Set([0]) // Start with first slide as visited
 
         // Navigation elements
         const prevButton = document.getElementById("prev-slide")
@@ -49,75 +53,105 @@ document.addEventListener("DOMContentLoaded", () => {
         const slideCounter = document.getElementById("current-slide")
         const totalSlidesElement = document.getElementById("total-slides")
         const progressBar = document.querySelector(".progress-bar")
-        const slideIndicatorsContainer = document.querySelector(".slide-indicators")
 
         // Set total slides
-        totalSlidesElement.textContent = totalSlides
-
-        // Create slide indicators
-        for (let i = 0; i < totalSlides; i++) {
-            const indicator = document.createElement("div")
-            indicator.classList.add("slide-indicator")
-            if (i === 0) indicator.classList.add("active")
-            indicator.addEventListener("click", () => goToSlide(i))
-            slideIndicatorsContainer.appendChild(indicator)
-        }
-
-        // Update slide indicators
-        function updateIndicators() {
-            const indicators = document.querySelectorAll(".slide-indicator")
-            indicators.forEach((indicator, index) => {
-                if (index === currentSlide) {
-                    indicator.classList.add("active")
-                } else {
-                    indicator.classList.remove("active")
-                }
-            })
+        if (totalSlidesElement) {
+            totalSlidesElement.textContent = totalSlides.toString()
         }
 
         // Update progress bar
         function updateProgressBar() {
-            const progress = ((currentSlide + 1) / totalSlides) * 100
-            progressBar.style.width = `${progress}%`
+            if (progressBar) {
+                const progress = ((currentSlide + 1) / totalSlides) * 100
+                progressBar.style.width = `${progress}%`
+            }
         }
 
-        // Go to specific slide
+        // Go to specific slide with fluid animation
         function goToSlide(index) {
-            if (index < 0) index = 0
-            if (index >= totalSlides) index = totalSlides - 1
+            // Don't do anything if we're already on this slide or animation is in progress
+            if (index === currentSlide || isAnimating) return
 
-            // Remove all classes
-            slides.forEach((slide) => {
-                slide.classList.remove("active", "prev")
-            })
+            // Set animating flag
+            isAnimating = true
 
-            // Add appropriate classes
-            slides[index].classList.add("active")
+            // Determine direction for transition effect
+            const direction = index > currentSlide ? 1 : -1
+            const isBackwardNavigation = direction === -1
 
-            // Update current slide
+            // Check if this is a new slide or one we've visited before
+            const isNewSlide = !visitedSlides.has(index)
+
+            // Add this slide to visited slides
+            visitedSlides.add(index)
+
+            // Get current and target slides
+            const currentSlideElement = slides[currentSlide]
+            const targetSlide = slides[index]
+
+            // Update current slide index
             currentSlide = index
 
-            // Update UI
-            slideCounter.textContent = currentSlide + 1
+            // Update UI elements
+            if (slideCounter) {
+                slideCounter.textContent = (currentSlide + 1).toString()
+            }
             updateProgressBar()
-            updateIndicators()
-
-            // Animate content with GSAP
-            animateSlideContent(slides[index])
 
             // Show/hide footer based on slide
             toggleFooter()
 
-            // Load GitHub repos when portfolio slide is active
-            if (index === 2 && !window.reposLoadedDesktop) {
-                fetchGitHubRepos("desktop")
-            }
+            // Create a timeline for smoother transitions
+            const tl = gsap.timeline({
+                defaults: { ease: "power2.inOut" },
+                onComplete: () => {
+                    // Reset animating flag
+                    isAnimating = false
+
+                    // Load GitHub repos when portfolio slide is active
+                    if (index === 2 && !window.reposLoadedDesktop) {
+                        fetchGitHubRepos("desktop")
+                    }
+                },
+            })
+
+            // Add animations to timeline - different behavior for forward/backward
+            tl.to(currentSlideElement, {
+                opacity: 0,
+                duration: isBackwardNavigation ? 0.2 : 0.3, // Faster exit when going back
+                onComplete: () => {
+                    // Hide previous slide
+                    currentSlideElement.classList.remove("active")
+
+                    // Position target slide
+                    targetSlide.classList.add("active")
+                },
+            }).fromTo(
+                targetSlide,
+                {
+                    opacity: 0,
+                    x: direction * (isBackwardNavigation ? 15 : 30), // Less movement when going back
+                },
+                {
+                    opacity: 1,
+                    x: 0,
+                    duration: isBackwardNavigation ? 0.3 : 0.4, // Slightly faster when going back
+                    onComplete: () => {
+                        // Only animate content for new slides or use minimal animation for revisited slides
+                        if (isNewSlide) {
+                            animateSlideContent(targetSlide, false)
+                        } else {
+                            // For revisited slides, show content immediately with minimal animation
+                            showSlideContentImmediately(targetSlide)
+                        }
+                    },
+                },
+            )
         }
 
         // Next slide
         function nextSlide() {
             if (currentSlide < totalSlides - 1) {
-                slides[currentSlide].classList.add("prev")
                 goToSlide(currentSlide + 1)
             }
         }
@@ -130,8 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Event listeners
-        prevButton.addEventListener("click", prevSlide)
-        nextButton.addEventListener("click", nextSlide)
+        if (prevButton) prevButton.addEventListener("click", prevSlide)
+        if (nextButton) nextButton.addEventListener("click", nextSlide)
 
         // Keyboard navigation
         document.addEventListener("keydown", (e) => {
@@ -142,106 +176,212 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         })
 
-        // Mouse wheel navigation with debounce
+        // Mouse wheel navigation - more responsive
         let wheelTimeout = null
-        const wheelDelay = 500 // ms between wheel events
-        let isWheelEnabled = true
+        const wheelDelay = 400 // Reduced delay for more responsiveness
 
         document.addEventListener("wheel", (e) => {
-            if (!isWheelEnabled) return
-
-            isWheelEnabled = false
+            // If animation is in progress, don't do anything
+            if (isAnimating) return
 
             // Clear any existing timeout
             if (wheelTimeout) {
                 clearTimeout(wheelTimeout)
             }
 
-            // Determine scroll direction
-            if (e.deltaY > 0) {
-                nextSlide()
-            } else {
-                prevSlide()
-            }
-
-            // Set timeout to re-enable wheel after delay
+            // Set a new timeout
             wheelTimeout = setTimeout(() => {
-                isWheelEnabled = true
-            }, wheelDelay)
+                // Determine scroll direction
+                if (e.deltaY > 0) {
+                    nextSlide()
+                } else {
+                    prevSlide()
+                }
+            }, 50) // Very short delay for immediate response
         })
 
-        // Animate slide content with GSAP
-        function animateSlideContent(slide) {
-            // Reset any previous animations
-            gsap.set(slide.querySelectorAll("h1, h2, h3, p, .btn, .skill-category, .project-card, .contact-card"), {
-                opacity: 0,
-                y: 20,
+        // Show slide content immediately (for revisited slides)
+        function showSlideContentImmediately(slide) {
+            if (!slide) return
+
+            // Define elements to animate
+            const headings = slide.querySelectorAll("h1, h2")
+            const paragraphs = slide.querySelectorAll("p")
+            const buttons = slide.querySelectorAll(".btn")
+            const skillCategories = slide.querySelectorAll(".skill-category")
+            const projectCards = slide.querySelectorAll(".project-card")
+            const socialCard = slide.querySelector(".social-card")
+            const socialLinkCards = slide.querySelectorAll(".social-link-card")
+            const skillExplanations = slide.querySelectorAll(".skill-explanation")
+
+            // Create a timeline with minimal animation
+            const tl = gsap.timeline({
+                defaults: { ease: "power1.out", duration: 0.2 },
             })
 
-            // Animate heading
-            gsap.to(slide.querySelectorAll("h1, h2"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                delay: 0.2,
+            // Add subtle fade-in animations
+            if (headings.length > 0) {
+                tl.fromTo(headings, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (paragraphs.length > 0) {
+                tl.fromTo(paragraphs, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (buttons.length > 0) {
+                tl.fromTo(buttons, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (skillCategories.length > 0) {
+                tl.fromTo(skillCategories, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (skillExplanations.length > 0) {
+                tl.fromTo(skillExplanations, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (projectCards.length > 0) {
+                tl.fromTo(projectCards, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (socialCard) {
+                tl.fromTo(socialCard, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+
+            if (socialLinkCards.length > 0) {
+                tl.fromTo(socialLinkCards, { opacity: 0.8 }, { opacity: 1 }, 0)
+            }
+        }
+
+        // Simplified content animation for better performance
+        function animateSlideContent(slide, isRevisited = false) {
+            if (!slide) return
+
+            // Define elements to animate
+            const headings = slide.querySelectorAll("h1, h2")
+            const paragraphs = slide.querySelectorAll("p")
+            const buttons = slide.querySelectorAll(".btn")
+            const skillCategories = slide.querySelectorAll(".skill-category")
+            const projectCards = slide.querySelectorAll(".project-card")
+            const socialCard = slide.querySelector(".social-card")
+            const socialLinkCards = slide.querySelectorAll(".social-link-card")
+            const skillExplanations = slide.querySelectorAll(".skill-explanation")
+
+            // Create a timeline with better easing
+            const tl = gsap.timeline({
+                defaults: {
+                    ease: "power1.out",
+                    duration: isRevisited ? 0.2 : 0.4, // Shorter duration for revisited slides
+                },
             })
 
-            // Animate paragraphs
-            gsap.to(slide.querySelectorAll("p"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                delay: 0.4,
-            })
+            // Add animations to timeline - simplified for better performance
+            if (headings.length > 0) {
+                tl.fromTo(
+                    headings,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    0,
+                )
+            }
 
-            // Animate buttons
-            gsap.to(slide.querySelectorAll(".btn"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                delay: 0.6,
-            })
+            if (paragraphs.length > 0) {
+                tl.fromTo(
+                    paragraphs,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    isRevisited ? 0 : 0.1,
+                )
+            }
 
-            // Animate skill categories
-            gsap.to(slide.querySelectorAll(".skill-category"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                stagger: 0.2,
-                delay: 0.4,
-            })
+            if (buttons.length > 0) {
+                tl.fromTo(buttons, { opacity: 0, y: isRevisited ? 5 : 15 }, { opacity: 1, y: 0 }, isRevisited ? 0 : 0.2)
+            }
 
-            // Animate project cards
-            gsap.to(slide.querySelectorAll(".project-card"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                stagger: 0.2,
-                delay: 0.4,
-            })
+            if (skillCategories.length > 0) {
+                tl.fromTo(
+                    skillCategories,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    isRevisited ? 0 : 0.2,
+                )
+            }
 
-            // Animate contact card
-            gsap.to(slide.querySelectorAll(".contact-card"), {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                delay: 0.4,
-            })
+            if (skillExplanations.length > 0) {
+                tl.fromTo(
+                    skillExplanations,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    isRevisited ? 0 : 0.3,
+                )
+            }
+
+            if (projectCards.length > 0) {
+                tl.fromTo(
+                    projectCards,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    isRevisited ? 0 : 0.2,
+                )
+            }
+
+            if (socialCard) {
+                tl.fromTo(socialCard, { opacity: 0, y: isRevisited ? 5 : 15 }, { opacity: 1, y: 0 }, isRevisited ? 0 : 0.2)
+            }
+
+            if (socialLinkCards.length > 0) {
+                tl.fromTo(
+                    socialLinkCards,
+                    { opacity: 0, y: isRevisited ? 5 : 15 },
+                    { opacity: 1, y: 0, stagger: isRevisited ? 0.03 : 0.08 },
+                    isRevisited ? 0 : 0.3,
+                )
+            }
         }
 
         // Show footer when reaching the last slide
         function toggleFooter() {
             const footer = document.querySelector(".desktop-footer")
-            if (currentSlide === totalSlides - 1) {
-                footer.classList.add("visible")
-            } else {
-                footer.classList.remove("visible")
+            if (footer) {
+                if (currentSlide === totalSlides - 1) {
+                    footer.classList.add("visible")
+                } else {
+                    footer.classList.remove("visible")
+                }
+            }
+        }
+
+        // Show navigation tooltip with keyboard hints
+        function showNavigationTooltip() {
+            const tooltip = document.getElementById("navigation-tooltip")
+            if (tooltip) {
+                // Update tooltip to include keyboard shortcuts
+                tooltip.innerHTML = `
+          <i class="fas fa-mouse"></i>
+          <span>Use mouse wheel or arrow keys (←→) to navigate</span>
+        `
+
+                // Show tooltip with animation
+                setTimeout(() => {
+                    tooltip.classList.add("visible")
+                }, 1000)
+
+                // Hide tooltip after 5 seconds
+                setTimeout(() => {
+                    tooltip.classList.remove("visible")
+                }, 6000)
             }
         }
 
         // Initialize first slide
-        goToSlide(0)
-        animateSlideContent(slides[0])
+        if (slides.length > 0) {
+            slides[0].classList.add("active")
+            animateSlideContent(slides[0])
+            updateProgressBar()
+        }
+
+        // Show navigation tooltip
+        showNavigationTooltip()
     }
     // ===== END DESKTOP FUNCTIONALITY =====
 
@@ -251,14 +391,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const mobileNavItems = document.querySelectorAll(".mobile-nav-item")
         const mobileSections = document.querySelectorAll(".mobile-section")
 
-        // Animate mobile sections on load
-        gsap.from(mobileSections, {
-            opacity: 0,
-            y: 30,
-            duration: 1,
-            stagger: 0.2,
-            delay: 0.5,
-        })
+        // Track visited sections to avoid reanimating content
+        const visitedSections = new Set(["mobile-intro"]) // Start with intro as visited
+
+        // Animate mobile sections on load - with smoother animation
+        if (mobileSections.length > 0) {
+            gsap.fromTo(
+                mobileSections,
+                { opacity: 0, y: 20 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.6,
+                    stagger: 0.15,
+                    ease: "power1.out",
+                    delay: 0.3,
+                },
+            )
+        }
 
         // Handle mobile navigation
         mobileNavItems.forEach((item) => {
@@ -268,7 +418,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Get the target section
                 const targetId = item.getAttribute("href")
+                if (!targetId) return
+
                 const targetSection = document.querySelector(targetId)
+                if (!targetSection) return
+
+                // Add to visited sections
+                visitedSections.add(targetId.substring(1)) // Remove the # from the ID
 
                 // Scroll to the section
                 targetSection.scrollIntoView({ behavior: "smooth" })
@@ -285,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const observerOptions = {
             root: null,
             rootMargin: "0px",
-            threshold: 0.5,
+            threshold: 0.3, // Lower threshold for earlier detection
         }
 
         const sectionObserver = new IntersectionObserver((entries) => {
@@ -293,9 +449,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (entry.isIntersecting) {
                     const sectionId = entry.target.id
 
+                    // Check if this is a new section
+                    const isNewSection = !visitedSections.has(sectionId)
+
+                    // Add to visited sections
+                    visitedSections.add(sectionId)
+
                     // Update active nav item
                     mobileNavItems.forEach((item) => {
-                        if (item.getAttribute("href") === `#${sectionId}`) {
+                        const href = item.getAttribute("href")
+                        if (href && href === `#${sectionId}`) {
                             item.classList.add("active")
                         } else {
                             item.classList.remove("active")
@@ -306,6 +469,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (sectionId === "mobile-projects" && !window.reposLoadedMobile) {
                         fetchGitHubRepos("mobile")
                     }
+
+                    // Animate section content if it's new
+                    if (isNewSection) {
+                        animateMobileSectionContent(entry.target)
+                    }
                 }
             })
         }, observerOptions)
@@ -315,10 +483,115 @@ document.addEventListener("DOMContentLoaded", () => {
             sectionObserver.observe(section)
         })
 
-        // Animate mobile elements
-        gsap.from(".mobile-hero h1", { opacity: 0, y: -30, duration: 1, delay: 0.3 })
-        gsap.from(".mobile-hero p", { opacity: 0, y: -20, duration: 1, delay: 0.5 })
-        gsap.from(".mobile-buttons .btn", { opacity: 0, y: 20, duration: 1, stagger: 0.2, delay: 0.7 })
+        // Function to animate mobile section content
+        function animateMobileSectionContent(section) {
+            if (!section) return
+
+            // Skip animation for already visited sections
+            if (section.classList.contains("animated")) return
+
+            // Mark as animated
+            section.classList.add("animated")
+
+            // Get elements to animate based on section ID
+            const sectionId = section.id
+
+            if (sectionId === "mobile-intro") {
+                const mobileHeroH1 = section.querySelector(".mobile-hero h1")
+                const mobileHeroP = section.querySelector(".mobile-hero p")
+                const mobileButtons = section.querySelectorAll(".mobile-buttons .btn")
+
+                // Create a timeline for mobile intro animations
+                const mobileTl = gsap.timeline({
+                    defaults: { ease: "power1.out", duration: 0.5 },
+                })
+
+                if (mobileHeroH1) {
+                    mobileTl.fromTo(mobileHeroH1, { opacity: 0, y: -20 }, { opacity: 1, y: 0 }, 0.2)
+                }
+
+                if (mobileHeroP) {
+                    mobileTl.fromTo(mobileHeroP, { opacity: 0, y: -15 }, { opacity: 1, y: 0 }, 0.3)
+                }
+
+                if (mobileButtons.length > 0) {
+                    mobileTl.fromTo(mobileButtons, { opacity: 0, y: 15 }, { opacity: 1, y: 0, stagger: 0.1 }, 0.4)
+                }
+            } else if (sectionId === "mobile-skills") {
+                const skillCategories = section.querySelectorAll(".mobile-skill-category")
+                const skillExplanations = section.querySelectorAll(".mobile-skill-explanation")
+
+                const mobileTl = gsap.timeline({
+                    defaults: { ease: "power1.out", duration: 0.5 },
+                })
+
+                if (skillCategories.length > 0) {
+                    mobileTl.fromTo(skillCategories, { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1 }, 0)
+                }
+
+                if (skillExplanations.length > 0) {
+                    mobileTl.fromTo(skillExplanations, { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1 }, 0.3)
+                }
+            } else if (sectionId === "mobile-projects") {
+                const projectCards = section.querySelectorAll(".mobile-project-card")
+
+                if (projectCards.length > 0) {
+                    gsap.fromTo(
+                        projectCards,
+                        { opacity: 0, y: 20 },
+                        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power1.out" },
+                    )
+                }
+            } else if (sectionId === "mobile-contact") {
+                const socialCard = section.querySelector(".mobile-social-card")
+                const socialLinkCards = section.querySelectorAll(".mobile-social-link-card")
+                const aboutMe = section.querySelector(".mobile-about-me")
+
+                const mobileTl = gsap.timeline({
+                    defaults: { ease: "power1.out", duration: 0.5 },
+                })
+
+                if (socialCard) {
+                    mobileTl.fromTo(socialCard, { opacity: 0, y: 20 }, { opacity: 1, y: 0 }, 0)
+                }
+
+                if (socialLinkCards.length > 0) {
+                    mobileTl.fromTo(socialLinkCards, { opacity: 0, y: 15 }, { opacity: 1, y: 0, stagger: 0.1 }, 0.2)
+                }
+
+                if (aboutMe) {
+                    mobileTl.fromTo(aboutMe, { opacity: 0, y: 15 }, { opacity: 1, y: 0 }, 0.4)
+                }
+            }
+        }
+
+        // Animate mobile elements on initial load
+        const mobileHeroH1 = document.querySelector(".mobile-hero h1")
+        const mobileHeroP = document.querySelector(".mobile-hero p")
+        const mobileButtons = document.querySelectorAll(".mobile-buttons .btn")
+
+        // Create a timeline for mobile intro animations
+        const mobileTl = gsap.timeline({
+            defaults: { ease: "power1.out", duration: 0.5 },
+        })
+
+        if (mobileHeroH1) {
+            mobileTl.fromTo(mobileHeroH1, { opacity: 0, y: -20 }, { opacity: 1, y: 0 }, 0.2)
+        }
+
+        if (mobileHeroP) {
+            mobileTl.fromTo(mobileHeroP, { opacity: 0, y: -15 }, { opacity: 1, y: 0 }, 0.3)
+        }
+
+        if (mobileButtons.length > 0) {
+            mobileTl.fromTo(mobileButtons, { opacity: 0, y: 15 }, { opacity: 1, y: 0, stagger: 0.1 }, 0.4)
+        }
+
+        // Mark intro section as animated
+        const introSection = document.getElementById("mobile-intro")
+        if (introSection) {
+            introSection.classList.add("animated")
+        }
     }
     // ===== END MOBILE FUNCTIONALITY =====
 
@@ -328,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.reposLoadedDesktop = false
     window.reposLoadedMobile = false
 
-    async function fetchGitHubRepos(version) {
+    async function fetchGitHubRepos(version, silent = false) {
         const username = "ziocash"
         const containerId = version === "desktop" ? "github-repos-container-desktop" : "github-repos-container-mobile"
         const reposContainer = document.getElementById(containerId)
@@ -347,6 +620,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
+            // Only show loading spinner if not silent
+            if (!silent) {
+                reposContainer.innerHTML = `
+          <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading repositories...</p>
+          </div>
+        `
+            }
+
             const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`)
 
             if (!response.ok) {
@@ -367,12 +650,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderRepos(sortedRepos, version)
         } catch (error) {
-            reposContainer.innerHTML = `
-        <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-          <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 1rem; color: #e74c3c;"></i>
-          <p>Could not load repositories. ${error.message}</p>
-        </div>
-      `
+            if (reposContainer) {
+                reposContainer.innerHTML = `
+          <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 1rem; color: #e74c3c;"></i>
+            <p>Could not load repositories. ${error.message}</p>
+          </div>
+        `
+            }
         }
     }
 
@@ -438,7 +723,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="${contentClass}">
           <div class="${tagsClass}">
-            ${repo.topics
+            ${repo.topics && repo.topics.length > 0
                     ? repo.topics
                         .slice(0, 4)
                         .map((topic) => `<span class="tag">${topic}</span>`)
@@ -476,24 +761,38 @@ document.addEventListener("DOMContentLoaded", () => {
             reposContainer.appendChild(repoCard)
         })
 
-        // Animate the repo cards
+        // Animate the repo cards with smoother animations
         if (version === "desktop") {
-            gsap.from(`#${containerId} .project-card`, {
-                opacity: 0,
-                y: 20,
-                duration: 0.8,
-                stagger: 0.2,
-                delay: 0.2,
-            })
+            const projectCards = document.querySelectorAll(`#${containerId} .project-card`)
+            if (projectCards.length > 0) {
+                gsap.fromTo(
+                    projectCards,
+                    { opacity: 0, y: 15 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.5,
+                        stagger: 0.1,
+                        ease: "power1.out",
+                    },
+                )
+            }
             window.reposLoadedDesktop = true
         } else {
-            gsap.from(`#${containerId} .mobile-project-card`, {
-                opacity: 0,
-                y: 20,
-                duration: 0.8,
-                stagger: 0.2,
-                delay: 0.2,
-            })
+            const mobileProjectCards = document.querySelectorAll(`#${containerId} .mobile-project-card`)
+            if (mobileProjectCards.length > 0) {
+                gsap.fromTo(
+                    mobileProjectCards,
+                    { opacity: 0, y: 15 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.5,
+                        stagger: 0.1,
+                        ease: "power1.out",
+                    },
+                )
+            }
             window.reposLoadedMobile = true
         }
     }
